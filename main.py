@@ -43,11 +43,11 @@ def fetch_rss_feed(feed_url):
     if response.status_code == 200:
         return response.content
     else:
-        print(f"Failed to fetch RSS feed.")
+        print(f"Failed to fetch RSS feed: {response}")
         return None
 
 def parse_and_insert(data, feed_type): 
-    soup = BeautifulSoup(data, 'xml')
+    soup = BeautifulSoup(data, 'xml') if data is not None else ''
 
     feed_datas = []
 
@@ -60,7 +60,7 @@ def parse_and_insert(data, feed_type):
 
         link = item.find('link').text.strip() if item.find('link') is not None else ''
         pubDate = item.find('pubDate').text.strip() if item.find('pubDate') is not None else ''
-        imgLink = item.find('enclosure')['url'] if item.find('enclosure') is not None else soup.find('media:content')['url']        
+        imgLink = item.find('enclosure')['url'] if item.find('enclosure') is not None else (item.find('media:content')['url'] if item.find('media:content') is not None else (item.find('media:thumbnail')['url'] if item.find('media:thumbnail') is not None else ''))
     
         entry_dict = {
             'title': title,
@@ -81,7 +81,6 @@ def interact_database_table(entries):
     cursor = conn.cursor()
     print(cursor)
     for entry in entries:
-        print(entry)
         cursor.execute('''
             INSERT INTO toi_recent_popular_news (title, description, link, pubDate,imgLink, feedType)
             VALUES (?, ?, ?, ?, ?, ?)
@@ -118,7 +117,6 @@ def get_data():
 def rss_data_in_table(url, rss_type):
     xml_data = fetch_rss_feed(url)
     rss_entries = parse_and_insert(xml_data, rss_type)
-    #print(rss_entries)
     interact_database_table(entries=rss_entries)
 
 
@@ -129,10 +127,10 @@ def index():
 
 @app.route('/add_url', methods=['POST'])
 def add_url():
-    print("request: ", request.form)
     if request.method == 'POST':
         url = request.form['url']
         feedType = request.form['feedType']
+        print(url)
          
         rss_data_in_table(url, feedType)
         return redirect(url_for('index'))
@@ -140,7 +138,6 @@ def add_url():
 @app.route('/data')
 def get_data_json():
     data = get_data()
-    print("Data: ", data)
     columns = ('title', 'description', 'link', 'pubDate', 'imgLink', 'feedType')
     json_data = [{columns[i]: row[i] for i in range(len(columns))} for row in data]
 
