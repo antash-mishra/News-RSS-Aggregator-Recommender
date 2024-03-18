@@ -107,7 +107,7 @@ def get_data():
               coalesce(pubDate, '') as pubDate, 
               coalesce(imgLink, '') as imgLink, 
               coalesce(feedType, '') as feedType 
-            FROM toi_recent_popular_news
+            FROM recent_news
         ''')
     data = c.fetchall()
     conn.close()
@@ -122,7 +122,6 @@ def rss_data_in_table(url, rss_type):
 
 @app.route('/', methods= ['GET', 'POST'])
 def index():
-
     return render_template('index.html')
 
 @app.route('/add_url', methods=['POST'])
@@ -141,7 +140,9 @@ def get_data_json():
     columns = ('title', 'description', 'link', 'pubDate', 'imgLink', 'feedType')
     json_data = [{columns[i]: row[i] for i in range(len(columns))} for row in data]
 
-    return jsonify(json_data)
+    # return jsonify(json_data)
+    print(json_data)
+    return render_template('news.html', data=json_data)
 
 # name = "50 Worst Habits For Belly Fat"
 
