@@ -11,8 +11,8 @@ import (
 
 var (
 	oauthConfig = oauth2.Config{
-		ClientID:     "421040362690-0b19ro2ppau8ekvjntaaeb0gbnukbuhf.apps.googleusercontent.com",
-		ClientSecret: "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",
+		ClientID:     "xxxxxxxxxxxxxxxxxxxx",
+		ClientSecret: "xxxxxxxxxxxxxxxxxxxxx",
 		RedirectURL:  "http://127.0.0.1:3000/auth/google/callback",
 		Scopes:       []string{"profile", "email"},
 		Endpoint:     google.Endpoint,
