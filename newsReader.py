@@ -8,35 +8,12 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import pandas as pd
 import numpy as np
 import xml.dom.minidom
+import tkinter as tk
 
+root = tk.Tk()
 
-
-
-hostName = "localhost"
-serverPort = 8080
-
-app = Flask(__name__)
-
-
-def create_database():
-    conn = sqlite3.connect('rss_data.db')
-    cursor = conn.cursor()
-    
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS toi_recent_popular_news (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT,
-            description TEXT,
-            link TEXT,
-            pubDate TEXT,
-            imgLink TEXT,
-            feedType TEXT
-        )
-    ''')
-    conn.commit()
-    conn.close()
-
-create_database()
+canvas = tk.Canvas(root, width=200, height=100)
+canvas.pack()
 
 def fetch_rss_feed(feed_url):
     response = requests.get(feed_url)
@@ -76,13 +53,13 @@ def parse_and_insert(data, feed_type):
 
 
 def interact_database_table(entries):
-    conn = sqlite3.connect('rss_data.db')
+    conn = sqlite3.connect(r'C:\Users\Antash\Desktop\news Agg Recsys\rss_data.db')
     
     cursor = conn.cursor()
     print(cursor)
     for entry in entries:
         cursor.execute('''
-            INSERT INTO toi_recent_popular_news (title, description, link, pubDate,imgLink, feedType)
+            INSERT OR IGNORE INTO recent_news (title, description, link, pubDate,imgLink, feedType)
             VALUES (?, ?, ?, ?, ?, ?)
         ''', (
             entry.get('title', ''),
@@ -120,29 +97,28 @@ def rss_data_in_table(url, rss_type):
     interact_database_table(entries=rss_entries)
 
 
-@app.route('/', methods= ['GET', 'POST'])
-def index():
-    return render_template('index.html')
-
-@app.route('/add_url', methods=['POST'])
 def add_url():
-    if request.method == 'POST':
-        url = request.form['url']
-        feedType = request.form['feedType']
-        print(url)
-         
-        rss_data_in_table(url, feedType)
-        return redirect(url_for('index'))
     
-@app.route('/data')
+    urls = [
+        'https://timesofindia.indiatimes.com/rssfeedmostrecent.cms', 
+        'https://timesofindia.indiatimes.com/rssfeeds/4719148.cms',
+        'https://rss.nytimes.com/services/xml/rss/nyt/US.xml'
+    ]
+    
+    feedType = ''
+
+    for url in urls:
+        print(url) 
+        rss_data_in_table(url, feedType)
+    return urls
+    
+# @app.route('/data')
 def get_data_json():
     data = get_data()
     columns = ('title', 'description', 'link', 'pubDate', 'imgLink', 'feedType')
     json_data = [{columns[i]: row[i] for i in range(len(columns))} for row in data]
 
-    # return jsonify(json_data)
-    print(json_data)
-    return render_template('news.html', data=json_data)
+    return jsonify(json_data)
 
 # name = "50 Worst Habits For Belly Fat"
 
@@ -152,7 +128,10 @@ def get_data_json():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    # app.run(debug=True)
+    add_url()
+
+
     #rss_feed_url = "https://timesofindia.indiatimes.com/rssfeedstopstories.cms"
     #rss_feed_url = "https://timesofindia.indiatimes.com/rssfeeds/4719148.cms"
     #rss_feed_url = "https://timesofindia.indiatimes.com/rssfeeds/54829575.cms"

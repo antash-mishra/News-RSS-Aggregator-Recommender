@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Profile</title>
+</head>
+<body>
+    <h1>User Profile</h1>
+    <p>Name: {{ .Name }}</p>
+    <p>Email: {{ .Email }}</p>
+    <img src="{{ .PictureURL }}" alt="Profile Picture">
+    <form action="/signout" method="post">
+        <button type="submit">Sign out</button>
+    </form>
+</body>
+</html>

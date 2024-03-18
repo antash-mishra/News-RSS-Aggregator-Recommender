@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>News</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .news-card {
+            margin-bottom: 20px;
+            height: 100%;
+        }
+
+        .card-body {
+            height: 100%;
+        }
+
+        .card-text {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3; /* number of lines to show */
+            -webkit-box-orient: vertical;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem !important; /* Adjust the spacing as needed */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="my-4">Recent News</h1>
+        <div class="row">
+            {% for news in data %}
+                <div class="col-md-4 mb-4">
+                    <div class="card news-card">
+                        <img src="{{ news['imgLink'] }}" class="card-img-top" alt="News Image">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ news['title'] }}</h5>
+                            <p class="card-text">{{ news['description'] }}</p>
+                            <a href="{{ news['link'] }}" class="btn btn-primary">Read more</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
