@@ -33,7 +33,16 @@
             {% for news in data %}
                 <div class="col-md-4 mb-4">
                     <div class="card news-card">
-                        <img src="{{ news['imgLink'] }}" class="card-img-top" alt="News Image">
+                        {% if news['imgLink'] %}
+                            <img src="{{ news['imgLink'] }}" class="card-img-top" alt="News Image">
+                        {% elif news['imageLink'] %}
+                            <img src="{{ news['imageLink'] }}" class="card-img-top" alt="News Image">
+                        {% else %}
+                            <!-- Add a placeholder image or alternative content here -->
+                            <div class="card-img-top placeholder-img">
+                                No Image Available
+                            </div>
+                        {% endif %}
                         <div class="card-body">
                             <h5 class="card-title">{{ news['title'] }}</h5>
                             <p class="card-text">{{ news['description'] }}</p>
