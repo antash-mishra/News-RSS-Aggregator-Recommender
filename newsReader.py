@@ -22,6 +22,35 @@ def fetch_rss_feed(feed_url):
     else:
         print(f"Failed to fetch RSS feed: {response}")
         return None
+    
+def get_first_image_url(url, news_title):
+    # Send a GET request to the website
+    response = requests.get(url)
+    
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Parse the HTML content using BeautifulSoup
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # Find the first <img> tag in the HTML
+        images = soup.find_all('img')      
+
+        for img in images:
+            if img.get('alt', '').strip() == news_title.strip():
+                print("Alt: " , img.get('alt', '').strip())
+                img_src = img.get('src')
+                return img_src
+            elif len(img.get('title', '').strip()) != 0:
+                print("Title: ", img.get('title', '').strip())
+                img_src = img.get('src')
+                return img_src
+            elif img.get('fetchpriority') == "high":
+                img_src = img.get('src')
+                return img_src     
+    else:
+        print("Failed to retrieve webpage:", response.status_code)
+        return None
+    
 
 def parse_and_insert(data, feed_type): 
     soup = BeautifulSoup(data, 'xml') if data is not None else ''
@@ -29,7 +58,7 @@ def parse_and_insert(data, feed_type):
     feed_datas = []
 
     for item in soup.find_all('item'):
-        #print(item.find('description').text)
+        print("Hello World", item.find('media:content'))
         title = item.find('title').text.strip() if item.find('title') is not None else ''
 
         description_element = item.find('description')
@@ -37,15 +66,18 @@ def parse_and_insert(data, feed_type):
 
         link = item.find('link').text.strip() if item.find('link') is not None else ''
         pubDate = item.find('pubDate').text.strip() if item.find('pubDate') is not None else ''
-        imgLink = item.find('enclosure')['url'] if item.find('enclosure') is not None else (item.find('media:content')['url'] if item.find('media:content') is not None else (item.find('media:thumbnail')['url'] if item.find('media:thumbnail') is not None else ''))
-    
+        #imgLink = item.find('enclosure')['url'] if item.find('enclosure') is not None else (item.find('media:content')['url'] if item.find('media:content') is not None else (item.find('media:thumbnail')['url'] if item.find('media:thumbnail') is not None else ''))
+        imageLink = get_first_image_url(link, title)
+
+
         entry_dict = {
             'title': title,
             'description': description,
             'link': link,
             'pubDate': pubDate,
             'imgLink': imgLink,
-            'feedType': feed_type
+            'feedType': feed_type,
+            'imageLinkNew': imageLink
         }
         
         feed_datas.append(entry_dict)
@@ -58,16 +90,18 @@ def interact_database_table(entries):
     cursor = conn.cursor()
     print(cursor)
     for entry in entries:
+
         cursor.execute('''
-            INSERT OR IGNORE INTO recent_news (title, description, link, pubDate,imgLink, feedType)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT OR IGNORE INTO recent_news (title, description, link, pubDate,imgLink, feedType, imageLinkNew)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         ''', (
             entry.get('title', ''),
             entry.get('description', ''),
             entry.get('link', ''),
             entry.get('pubDate', ''),
             entry.get('imgLink', ''),
-            entry.get('feedType', '')
+            entry.get('feedType', ''),
+            entry.get('imageLinkNew', '')
              ))
         
     conn.commit()
@@ -83,7 +117,8 @@ def get_data():
               coalesce(link,'') as link, 
               coalesce(pubDate, '') as pubDate, 
               coalesce(imgLink, '') as imgLink, 
-              coalesce(feedType, '') as feedType 
+              coalesce(feedType, '') as feedType,
+              coalesce(imageLinkNew, '') as imageLink
             FROM recent_news
         ''')
     data = c.fetchall()
@@ -115,7 +150,7 @@ def add_url():
 # @app.route('/data')
 def get_data_json():
     data = get_data()
-    columns = ('title', 'description', 'link', 'pubDate', 'imgLink', 'feedType')
+    columns = ('title', 'description', 'link', 'pubDate', 'imgLink', 'feedType', 'imageLink')
     json_data = [{columns[i]: row[i] for i in range(len(columns))} for row in data]
 
     return jsonify(json_data)
